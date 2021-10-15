@@ -1,0 +1,124 @@
+/**
+ * 多种创建任务的方式
+ * 第一种 直接以一个任务名字创建
+ */
+
+def createTask1 = task(createTask1)
+
+createTask1.doLast {
+    println("创建方法原型为：Task task(Str ng name) throws InvalidUserDataException")
+}
+
+/**
+ * 第二种 以一个任务名 + 一个对该任务配置的map对象进行创建
+ * 配置项          描述                                      默认值
+ * type        基于一个存在的Task来创建，相当于继承             DefaultTask
+ * override    是否替换存在的Task，搭配type使用               false
+ * dependsOn   配置任务的依赖                               []
+ * action      添加到任务中的一个Action或者一个闭包            null
+ * description 配置任务描述                                 null
+ * group       配置任务分组                                 null
+ *
+ */
+def createTask2 = task(createTask2 ,group: BasePlugin.BUILD_GROUP)
+
+createTask2.doLast {
+    println "创建方法原型为: Task task(Map<String , ?> args, String name) throws InvalidUserDataException"
+    println "任务分组 ${createTask2.group}"
+}
+
+/**
+ * 第三种 任务名 + 闭包配置的方式
+ */
+
+task createTask3 {
+    description '演示配置文件'
+    doLast {
+        println("创建方法原型为: Task task(String name, Closure configureClosure)")
+        println("任务描述: ${description}")
+    }
+}
+
+
+/**
+ * 多种方式访问任务
+ * 通过Project的属性tasks 任务集合访问 TaskContainer
+ */
+tasks['createTask1'].doFirst {
+    println("TaskContainer集合取出")
+}
+
+/**
+ * 通过路径访问
+ * task.finByPath   task.getByPath
+ * 通过名称访问
+ * tasks.findByName  task.getByName
+ */
+
+/**
+ * << 操作符 == doLast
+ */
+
+
+/**
+ * 任务的执行分析
+ * 当执行一个任务时，其实就是执行其拥有的actions列表，这个列表保存在Task对象实例中的
+ * actions变量中
+ */
+
+def Task myTask = task customTask(type : CustomTask)
+myTask.doFirst {
+    println("Task 执行之前 doFirst")
+}
+myTask.doLast {
+    println("Task 执行之后 doLast")
+}
+
+class CustomTask extends DefaultTask{
+    @TaskAction
+    def doSelf() {
+        println("Task 本身执行 doSelf")
+    }
+}
+
+
+/**
+ * 任务排序
+ * taskB.shouldRunAfter(taskA) 表示TaskB应该在TaskA之后执行
+ * taskB.mustRunAfter(taskA) 表示TaskB必须在TaskA之后执行
+ */
+
+def task1 = task orderTask {
+    println("OrderTask1")
+}
+
+def task2 = task orderTask2 {
+    println("OrderTask2")
+}
+
+task1.mustRunAfter task2
+
+/**
+ * 任务的启用和禁用
+ * enabled 属性
+ */
+task1.enabled = false // 禁用
+
+
+/**
+ * onlyIf 断言，接受一个闭包作为参数，如果闭包返回true则执行这个任务否则跳过该任务
+ */
+
+
+/**
+ * 任务规则
+ */
+tasks.addRule("规则描述") {
+    String taskNames -> task(taskNames) {
+        println("任务：${taskNames} 不存在，请检查后再执行")
+    }
+}
+
+task ruleTask {
+    dependsOn(missTask)
+}

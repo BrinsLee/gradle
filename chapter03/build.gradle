@@ -1,0 +1,174 @@
+
+task hello {
+    doLast {
+        println 'Hello World!'
+        println '666'
+    }
+}
+
+// 闭包 单参数
+task helloClosure {
+    customEach {
+        println it
+    }
+}
+
+def customEach(closure) {
+    for (int i in 1..10) {
+        closure("这是第${i}个")
+    }
+}
+
+// 向闭包传递参数
+task helloClosure2 {
+    eachMap { k, v ->
+        println "${k}, ${v}"
+    }
+}
+
+def eachMap( closure) {
+    def map = ["name": "张三", "age": 19]
+    map.each({
+        closure(it.key, it.value)
+    })
+}
+
+// 闭包委托
+/**
+ * 拥有 thisObject、owner、delegate三个属性
+ * 当调用闭包方法时，由他们确定使用哪个对象来处理
+ * 默认情况下delegate和owner是相同的，但delegate是可以被修改的
+ *
+ * thisObject优先级 > owner > delegate，默认情况下优先使用thisObject来调用闭包内的方法
+ * 其实就是构建脚本的上下文，它和脚本的this对象是相等的
+ *
+ */
+task helloDelegate {
+    new Delegate().test {
+        println "thisObject: ${thisObject.getClass()}"
+        println "owner: ${owner.getClass()}"
+        println "delagate: ${delegate.getClass()}"
+        method1()
+        it.method1()
+    }
+}
+
+def method1() {
+    println "Context this: ${this.getClass()} in root"
+    println "method1 in root"
+}
+
+class Delegate {
+    def method1() {
+        println "Delegate this: ${this.getClass()} in Delegate"
+        println "method1 in Delegate"
+    }
+
+    def test (Closure<Delegate> closure) {
+        closure(this)
+    }
+}
+
+/**
+ * 在DSL中我们一般回指定delegate为当前的it
+ */
+task configClosure {
+    person {
+        name = "张三"
+        age = 25
+        dumpPerson()
+    }
+}
+
+class Person {
+    String name
+    int age
+
+    def dumpPerson() {
+        println "name is ${name}, age is ${age}"
+    }
+}
+
+def person(Closure<Person> closure) {
+    Person p = new Person()
+    closure.delegate = p
+    closure.setResolveStrategy(Closure.DELEGATE_FIRST)
+    closure(p)
+}
+
+// 任务依赖
+/**
+ * 任务之间存在依赖，可以控制哪些任务先于哪些任务执行，哪些任务执行后，其他任务才能执行。
+ */
+task exHello {
+    println 'hello'
+}
+
+task exWorld {
+    println 'world'
+}
+
+task exMain (dependsOn: exHello){
+    doLast {
+        println "after exHello, executing exMain "
+    }
+}
+
+// 依赖多个任务
+task exMultiTask {
+    dependsOn(exHello, exWorld)
+    doLast {
+        println "after exHello exWorld, executing exMain "
+    }
+}
+
+// 任务间API控制、交互
+
+/**
+ * 操作task
+ */
+
+task exHello2 {
+    println 'exHello2 doHello'
+}
+
+exHello2.doFirst {
+    println 'exHello2 doFirst'
+}
+
+exHello2.doLast {
+    println 'exHello2 doLast'
+}
+
+/**
+ * 3.7 自定义属性
+ * 自定义一个属性
+ */
+ext.age = 19
+
+/**
+ * 通过代码块定义多个属性
+ */
+ext {
+    phone = 13215647896
+    address = '广州羊城创意园'
+}
+
+/**
+ * 使用sourceSet定义属性
+ */
+/*sourceSets {
+    man {
+        resourcesDir = 'main/res'
+    }
+
+    tes {
+        resourcesDir = 'test/res'
+    }
+}*/
+
+task customProperty {
+    println("age : ${age}")
+    println("phone : ${phone}")
+    println("address : ${address}")
+}

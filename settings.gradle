@@ -1,0 +1,4 @@
+rootProject.name = 'gradleStudy'
+include 'chapter03'
+include 'chapter04'
+
